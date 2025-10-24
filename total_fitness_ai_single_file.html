@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Total Fitness AI — Prototype</title>
+<style>
+:root{
+  --bg:#121314; --card:#1f2325; --muted:#c5c8ca; --accent:#f08a2a; --accent-strong:#ff9a3a;
+  --glass: rgba(255,255,255,0.03); --radius:14px; font-family:Inter, Roboto, system-ui, -apple-system, "Segoe UI", Arial;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:linear-gradient(180deg,#0f1112,#181a1b);color:var(--muted);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+.hidden{display:none}
+.splash{height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:18px;background:linear-gradient(180deg,#0d0e0f,#161718)}
+.gear{font-size:110px;opacity:0.12;transform-origin:center;animation:spin 6s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.title{margin-top:12px}
+.logo{font-size:20px;font-weight:800;letter-spacing:1px;color:var(--accent);text-shadow:0 0 12px rgba(240,138,42,0.12)}
+.tag{color:var(--muted);margin-top:8px;font-size:14px;max-width:420px}
+
+.container{max-width:980px;margin:12px auto;padding:12px}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--card);border-radius:12px;margin-bottom:10px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+.brand{font-weight:700;color:var(--accent)}
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.45);margin:10px 0}
+.auth-card{max-width:520px;margin:auto}
+.input-row input, .input-row select{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--muted)}
+.btn-row{display:flex;gap:10px}
+.btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 12px;border-radius:10px;color:var(--muted);cursor:pointer}
+.btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-strong));border:none;color:#111}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.widget h3{color:#fff;margin-top:0}
+.scanner-placeholder{margin-top:10px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.03);text-align:center;color:var(--muted)}
+
+.footer{margin-top:12px;text-align:center;color:rgba(200,200,200,0.28);font-size:13px}
+
+.small{font-size:13px;color:rgba(200,200,200,0.6)}
+
+/* glow ripple */
+.glow { position: absolute; left:50%; top:45%; transform:translate(-50%,-50%); pointer-events:none; width:260px;height:64px;border-radius:18px; background:radial-gradient(circle at center, rgba(240,138,42,0.18), transparent 40%); animation: glowFade 600ms ease-out forwards; }
+@keyframes glowFade{from{opacity:1;transform:translate(-50%,-50%) scale(0.98)}to{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
+
+/* simple responsive bottom nav */
+.bottom-nav{position:fixed;left:12px;right:12px;bottom:18px;display:flex;justify-content:space-around;background:linear-gradient(180deg,rgba(0,0,0,0.35),rgba(0,0,0,0.25));padding:8px;border-radius:14px;backdrop-filter:blur(6px);}
+.nav-btn{padding:10px 12px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--muted);font-weight:600}
+
+.user-pill{font-size:13px;color:var(--muted)}
+
+/* simple form layout */
+.form-row{display:flex;gap:8px;align-items:center}
+.form-row input[type="number"]{width:80px}
+
+/* make file preview */
+.thumb{max-width:100%;border-radius:8px;margin-top:8px}
+
+/* small helpers */
+.center{text-align:center}
+</style>
+</head>
+<body>
+  <div id="splash" class="splash" role="dialog" aria-label="Startup animation">
+    <div id="gear" class="gear" aria-hidden="true">⚙️</div>
+    <div class="title">
+      <div class="logo">Total Fitness AI</div>
+      <div class="tag">Your one-stop shop for muscle building, nutrition, and recovery.</div>
+    </div>
+    <div class="small" style="margin-top:14px">Tap to skip • 10s</div>
+  </div>
+
+  <main id="app" class="hidden" role="application" aria-live="polite">
+    <div class="container">
+      <header class="topbar card">
+        <div class="brand">⚙️ Total Fitness AI</div>
+        <div id="userArea" class="user-pill"></div>
+      </header>
+
+      <section id="auth" class="card auth-card">
+        <h2>Welcome</h2>
+        <div class="input-row">
+          <input id="username" placeholder="Username (local)" autocomplete="username" />
+          <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+        </div>
+        <div class="btn-row">
+          <button id="signupBtn" class="btn">Sign Up</button>
+          <button id="loginBtn" class="btn primary">Log In</button>
+        </div>
+        <label class="small"><input type="checkbox" id="rememberMe" /> Keep me signed in</label>
+        <hr/>
+        <div class="small">Quick test accounts: <strong>demo / demo</strong></div>
+      </section>
+
+      <section id="dashboard" class="hidden">
+        <div class="grid">
+          <div class="card widget" id="workouts">
+            <h3>Workouts</h3>
+            <div id="workoutContent" class="small">No workouts yet.</div>
+            <div style="margin-top:8px" class="form-row">
+              <input id="exercise" placeholder="Exercise name" />
+              <input id="sets" type="number" placeholder="Sets" min="1" />
+              <input id="reps" type="number" placeholder="Reps" min="1" />
+            </div>
+            <div style="margin-top:8px" class="btn-row">
+              <button class="btn small" id="addWorkout">Add Workout</button>
+              <button class="btn small" id="clearWorkouts">Clear</button>
+            </div>
+          </div>
+
+          <div class="card widget" id="nutrition">
+            <h3>Nutrition</h3>
+            <div id="nutritionContent" class="small">No meals logged.</div>
+            <div class="scanner-placeholder small">📷 Camera / Barcode Scanner (placeholder)</div>
+            <div style="margin-top:8px" class="form-row">
+              <input id="mealName" placeholder="Meal name" />
+              <input id="cal" type="number" placeholder="kcal" />
+            </div>
+            <div style="margin-top:8px" class="btn-row">
+              <button class="btn small" id="addMeal">Add Meal</button>
+              <button class="btn small" id="clearMeals">Clear</button>
+            </div>
+            <div style="margin-top:8px">
+              <input id="photoInput" type="file" accept="image/*" />
+              <img id="photoPreview" class="thumb hidden" alt="photo preview" />
+            </div>
+          </div>
+
+          <div class="card widget" id="progress">
+            <h3>Progress</h3>
+            <canvas id="progressChart" width="340" height="140" style="width:100%;height:140px"></canvas>
+            <div class="small center" id="progressNote">No progress data yet.</div>
+          </div>
+
+          <div class="card widget" id="recovery">
+            <h3>Recovery & Injury</h3>
+            <div id="injuryContent" class="small">No injuries marked.</div>
+            <div style="margin-top:8px" class="form-row">
+              <label class="small">Sleep (hrs): <input id="sleep" type="number" min="0" max="24" /></label>
+              <label class="small">Soreness (1-10): <input id="soreness" type="number" min="0" max="10" /></label>
+            </div>
+            <div style="margin-top:8px" class="btn-row">
+              <button class="btn small" id="saveRecovery">Save</button>
+              <button class="btn small" id="clearRecovery">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="card">
+          <h3>Share / Sync (local only)</h3>
+          <div class="small">Export a sync key (copy/paste) to move data between devices manually.</div>
+          <div style="margin-top:8px" class="btn-row">
+            <button class="btn" id="exportBtn">Export Sync Key</button>
+            <button class="btn" id="importBtn">Import Sync Key</button>
+          </div>
+          <textarea id="syncKeyArea" placeholder="Paste sync key here to import" rows="3" style="width:100%;margin-top:8px"></textarea>
+        </div>
+
+      </section>
+
+      <footer class="footer small">Prototype — offline mode • Industrial theme • Burnt orange accents</footer>
+    </div>
+  </main>
+
+<script>
+(() => {
+  // helpers + state
+  const splash = document.getElementById('splash');
+  const app = document.getElementById('app');
+  const auth = document.getElementById('auth');
+  const dashboard = document.getElementById('dashboard');
+  const usernameInput = document.getElementById('username');
+  const passwordInput = document.getElementById('password');
+  const signupBtn = document.getElementById('signupBtn');
+  const loginBtn = document.getElementById('loginBtn');
+  const rememberMe = document.getElementById('rememberMe');
+  const userArea = document.getElementById('userArea');
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const syncKeyArea = document.getElementById('syncKeyArea');
+
+  function saveUsers(users){ localStorage.setItem('tfa_users', JSON.stringify(users)) }
+  function loadUsers(){ return JSON.parse(localStorage.getItem('tfa_users')||'{}') }
+  function saveSession(s){ if(s) localStorage.setItem('tfa_session', JSON.stringify(s)); else localStorage.removeItem('tfa_session') }
+  function loadSession(){ return JSON.parse(localStorage.getItem('tfa_session')||'null') }
+
+  async function hashText(text){
+    try{
+      const enc = new TextEncoder();
+      const data = enc.encode(text);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }catch(e){ return text; }
+  }
+
+  function playKeySound(){ try{ const ctx = new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(); const g=ctx.createGain(); o.type='sine'; o.frequency.setValueAtTime(520,ctx.currentTime); g.gain.setValueAtTime(0,ctx.currentTime); g.gain.linearRampToValueAtTime(0.18,ctx.currentTime+0.01); g.gain.linearRampToValueAtTime(0,ctx.currentTime+0.22); o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.22);}catch(e){} }
+
+  function createGlow(){ const g=document.createElement('div'); g.className='glow'; document.body.appendChild(g); setTimeout(()=>g.remove(),700); }
+
+  // splash control
+  let splashTimer = setTimeout(()=>{ goToAuth(); }, 10000);
+  splash.addEventListener('click', ()=>{ createGlow(); playKeySound(); clearTimeout(splashTimer); setTimeout(goToAuth,220); });
+
+  function hideSplash(){ splash.classList.add('hidden'); app.classList.remove('hidden'); }
+  function goToAuth(){ hideSplash(); const s=loadSession(); if(s && s.username){ showDashboard(s.username); } else { auth.classList.remove('hidden'); } }
+
+  // Demo account: demo/demo
+  signupBtn.addEventListener('click', async ()=>{
+    const u=usernameInput.value.trim(); const p=passwordInput.value;
+    if(!u||!p){ alert('Enter username and password'); return; }
+    const users=loadUsers(); if(users[u]){ alert('User exists — please log in'); return; }
+    const hash=await hashText(p); users[u]={passwordHash:hash,data:{workouts:[],meals:[],progress:[]},created:Date.now()}; saveUsers(users);
+    if(rememberMe.checked) saveSession({username:u}); showDashboard(u);
+  });
+
+  loginBtn.addEventListener('click', async ()=>{
+    const u=usernameInput.value.trim(); const p=passwordInput.value;
+    if(!u||!p){ alert('Enter username and password'); return; }
+    const users=loadUsers(); if(!users[u]){ if(u==='demo'&&p==='demo'){ // create demo account
+      users['demo']={passwordHash:await hashText('demo'),data:{workouts:['Demo: Full Body 3x8'],meals:['Demo meal'],progress:[50]}}; saveUsers(users);
+    } else { alert('User not found — sign up.'); return; } }
+    const hash=await hashText(p); if(hash!==users[u].passwordHash){ alert('Incorrect password'); return; }
+    if(rememberMe.checked) saveSession({username:u}); showDashboard(u);
+  });
+
+  function showDashboard(username){
+    auth.classList.add('hidden'); dashboard.classList.remove('hidden');
+    userArea.innerHTML=`Signed in as <strong>${username}</strong> <button id="signout" class="btn small">Sign Out</button>`;
+    document.getElementById('signout').addEventListener('click', ()=>{ saveSession(null); location.reload(); });
+    renderUserData(username);
+  }
+
+  function renderUserData(username){
+    const users=loadUsers(); const u=users[username]; if(!u) return;
+    document.getElementById('workoutContent').textContent = (u.data.workouts && u.data.workouts.length) ? u.data.workouts.join(' • ') : 'No workouts yet.';
+    document.getElementById('nutritionContent').textContent = (u.data.meals && u.data.meals.length) ? u.data.meals.join(' • ') : 'No meals logged.';
+    document.getElementById('injuryContent').textContent = (u.data.injuries && u.data.injuries.length) ? u.data.injuries.join(' • ') : 'No injuries marked.';
+    document.getElementById('sleep').value = u.data.sleep || '';
+    document.getElementById('soreness').value = u.data.soreness || '';
+    drawProgress(u.data.progress||[]);
+  }
+
+  // workouts
+  document.getElementById('addWorkout').addEventListener('click', ()=>{
+    const u=loadSession(); if(!u) return alert('Sign in first'); const users=loadUsers(); const ex=document.getElementById('exercise').value.trim()||'Exercise'; const sets=document.getElementById('sets').value||3; const reps=document.getElementById('reps').value||8;
+    users[u.username].data.workouts = users[u.username].data.workouts || []; users[u.username].data.workouts.push(`${ex} ${sets}x${reps}`); saveUsers(users); renderUserData(u.username);
+  });
+  document.getElementById('clearWorkouts').addEventListener('click', ()=>{ const u=loadSession(); if(!u) return; const users=loadUsers(); users[u.username].data.workouts=[]; saveUsers(users); renderUserData(u.username); });
+
+  // nutrition
+  document.getElementById('addMeal').addEventListener('click', ()=>{
+    const u=loadSession(); if(!u) return alert('Sign in first'); const users=loadUsers();
+    const meal=document.getElementById('mealName').value.trim()||'Meal'; const kcal=document.getElementById('cal').value||0;
+    users[u.username].data.meals = users[u.username].data.meals||[]; users[u.username].data.meals.push(`${meal} (${kcal} kcal)`); saveUsers(users); renderUserData(u.username);
+  });
+  document.getElementById('clearMeals').addEventListener('click', ()=>{ const u=loadSession(); if(!u) return; const users=loadUsers(); users[u.username].data.meals=[]; saveUsers(users); renderUserData(u.username); });
+
+  // photo preview
+  const photoInput=document.getElementById('photoInput'); const photoPreview=document.getElementById('photoPreview');
+  photoInput.addEventListener('change', (e)=>{
+    const f=e.target.files[0]; if(!f) return; const url=URL.createObjectURL(f); photoPreview.src=url; photoPreview.classList.remove('hidden');
+    const reader=new FileReader(); reader.onload=function(){ const u=loadSession(); if(!u) return; const users=loadUsers(); users[u.username].data.lastPhoto=reader.result; saveUsers(users); }; reader.readAsDataURL(f);
+  });
+
+  // recovery
+  document.getElementById('saveRecovery').addEventListener('click', ()=>{
+    const u=loadSession(); if(!u) return alert('Sign in first'); const users=loadUsers(); users[u.username].data.sleep = Number(document.getElementById('sleep').value)||0; users[u.username].data.soreness = Number(document.getElementById('soreness').value)||0; saveUsers(users); renderUserData(u.username);
+  });
+  document.getElementById('clearRecovery').addEventListener('click', ()=>{ const u=loadSession(); if(!u) return; const users=loadUsers(); delete users[u.username].data.sleep; delete users[u.username].data.soreness; saveUsers(users); renderUserData(u.username); });
+
+  // progress chart (simple)
+  function drawProgress(points){
+    const c=document.getElementById('progressChart'); const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height);
+    ctx.strokeStyle='#ff9a3a'; ctx.lineWidth=3; ctx.beginPath();
+    if(points.length===0){ ctx.fillStyle='rgba(255,154,58,0.06)'; ctx.fillRect(0,0,c.width,c.height); document.getElementById('progressNote').textContent='No progress yet.'; return; }
+    const max=Math.max(...points,10); points.forEach((p,i)=>{ const x=(i/(points.length-1||1))*(c.width-10)+5; const y=c.height-(p/max*(c.height-20))-10; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }); ctx.stroke(); document.getElementById('progressNote').textContent='Progress shown.';
+  }
+
+  // export/import sync key
+  exportBtn.addEventListener('click', ()=>{
+    const u=loadSession(); if(!u) return alert('Sign in first'); const users=loadUsers(); const payload={username:u.username,data:users[u.username].data}; const b64=btoa(JSON.stringify(payload)); syncKeyArea.value=b64; alert('Sync key generated: copy this key to another device and paste to import.');
+  });
+  importBtn.addEventListener('click', ()=>{
+    const txt=syncKeyArea.value.trim(); if(!txt) return alert('Paste sync key then click Import'); try{ const raw=atob(txt); const payload=JSON.parse(raw); const users=loadUsers(); users[payload.username]=users[payload.username]||{passwordHash:'',data:payload.data}; saveUsers(users); alert('Imported. Sign in with the username to see data.'); }catch(e){ alert('Invalid key'); }
+  });
+
+  // demo account
+  (function initDemo(){ const users=loadUsers(); if(!users['demo']){ users['demo']={passwordHash:null,data:{workouts:['Demo: Upper Push - 3x8'],meals:['Chicken + Rice'],progress:[20,35,50]}}; saveUsers(users);} })();
+
+  // start app after small delay so splash visible
+  setTimeout(()=>{},200);
+
+  // expose goToAuth
+  window.goToAuth = function(){ const s=loadSession(); hideSplash(); if(s && s.username) showDashboard(s.username); else auth.classList.remove('hidden'); };
+
+})();
+</script>
+
+</body>
+</html>
